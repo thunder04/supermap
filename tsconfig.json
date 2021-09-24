@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "forceConsistentCasingInFileNames": true,
+        "emitDeclarationOnly": true,
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "declaration": true,
+        "module": "ESNext",
+        "target": "ESNext",
+        "outDir": "dist",
+        "strict": true,
+    },
+    "include": [
+        "src"
+    ]
+}

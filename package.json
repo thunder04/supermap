@@ -1,0 +1,16 @@
+{
+    "name": "@thunder04/*",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "devDependencies": {
+        "@types/node": "^16.9.3",
+        "esbuild": "^0.12.28",
+        "typescript": "^4.4.3"
+    },
+    "scripts": {
+        "prepack": "npm run build && npm run types",
+        "types": "tsc --emitDeclarationOnly",
+        "build": "node build.mjs"
+    }
+}
