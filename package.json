@@ -1,7 +1,7 @@
 {
     "name": "@thunder04/supermap",
+    "types": "./dist/index.d.ts",
     "version": "1.0.0",
-    "private": true,
     "exports": {
         "import": "./dist/index.mjs",
         "require": "./dist/index.js"
