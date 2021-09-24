@@ -11,6 +11,8 @@ class SuperMap<K, V> extends Map<K, V> {
 
         if (options.expireAfter !== null && !Number.isSafeInteger(options.expireAfter)) throw new TypeError('options.expireAfter must be a safe integer')
         if ('intervalTime' in options && !Number.isSafeInteger(options.intervalTime)) throw new TypeError('options.intervalTime must be a safe integer')
+        if ('itemsLimit' in options && !Number.isSafeInteger(options.itemsLimit)) throw new TypeError('options.itemsLimit must be a safe integer')
+        if ('onSweep' in options && typeof options.onSweep !== 'function') throw new TypeError('options.onSweep must be a function')
 
         super()
         this.#options = options as never
@@ -24,7 +26,6 @@ class SuperMap<K, V> extends Map<K, V> {
     public delete(key: K) { return this.#dateCache?.delete(key), super.delete(key) }
     /** Converts the map to an object. */
     public toJSON() { return ({ entries: this.toArray(), options: this.#options }) }
-    public clear() { return this.stopInterval(), super.clear() }
     /** Converts the entries of the map to an array. */
     public toArray() { return Array.from(this.entries()) }
 
@@ -40,6 +41,12 @@ class SuperMap<K, V> extends Map<K, V> {
         }
 
         return this.#dateCache?.set(key, Date.now()), super.set(key, value)
+    }
+
+    /** Clears the map. Optionally stops the interval as well. */
+    public clear(stopInterval = false) {
+        if (stopInterval) this.stopInterval()
+        return this.#dateCache?.clear(), super.clear()
     }
 
     /** Gets the first key or value (if it exists) */
