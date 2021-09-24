@@ -1,4 +1,4 @@
-import { opendir } from 'node:fs/promises';
+import { opendir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import esbuild from 'esbuild'
 
@@ -21,8 +21,11 @@ esbuild.buildSync({
     platform: 'node',
     keepNames: true,
     outdir: 'dist',
-    format: 'esm',
+    format: 'cjs',
     bundle: true,
     minify: true,
     entryPoints,
 })
+
+await writeFile('./dist/index.mjs', "import m from './index.js';export default m", { flag: 'wx' })
+    .catch(() => null)

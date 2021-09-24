@@ -2,7 +2,10 @@
     "name": "@thunder04/supermap",
     "version": "1.0.0",
     "private": true,
-    "type": "module",
+    "exports": {
+        "import": "./dist/index.mjs",
+        "require": "./dist/index.js"
+    },
     "devDependencies": {
         "@types/node": "^16.9.3",
         "esbuild": "^0.12.28",
