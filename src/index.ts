@@ -22,8 +22,10 @@ class SuperMap<K, V> extends Map<K, V> {
     }
 
     public delete(key: K) { return this.#dateCache?.delete(key), super.delete(key) }
+    /** Converts the map to an object. */
     public toJSON() { return ({ entries: this.toArray(), options: this.#options }) }
     public clear() { return this.stopInterval(), super.clear() }
+    /** Converts the entries of the map to an array. */
     public toArray() { return Array.from(this.entries()) }
 
     public set(key: K, value: V) {
@@ -40,12 +42,26 @@ class SuperMap<K, V> extends Map<K, V> {
         return this.#dateCache?.set(key, Date.now()), super.set(key, value)
     }
 
+    /** Gets the first key or value (if it exists) */
     public first(key?: false): V | undefined
     public first(key: true): K | undefined
     public first(key?: boolean): unknown {
         return key ? this.keys().next().value : this.values().next().value
     }
 
+    /** 
+      * Gets the last key or value (if it exists)
+      * 
+      * **Avoid using this method as it calls the this.toArray() method. If it's unavoidable, at least cache the results.**
+     */
+    public last(key?: false): V | undefined
+    public last(key: true): K | undefined
+    public last(key?: boolean): unknown {
+        const [k, v] = this.toArray()[this.size - 1]
+        return key ? k : v
+    }
+
+    /** See [Array.prototype.some](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some) */
     public some(func: (value: V, key: K, self: this) => boolean) {
         const entries = this.entries()
 
@@ -58,6 +74,7 @@ class SuperMap<K, V> extends Map<K, V> {
         }
     }
 
+    /** See [Array.prototype.every](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every) */
     public every(func: (value: V, key: K, self: this) => boolean) {
         const entries = this.entries()
 
@@ -70,12 +87,13 @@ class SuperMap<K, V> extends Map<K, V> {
         }
     }
 
-    public sweep(func: (value: V, key: K, self: this) => boolean) {
+    /** Deletes the entries that pass the sweeper function and optionally calls the `onSweep` callback (defined in `options`) */
+    public sweep(sweeper: (value: V, key: K, self: this) => boolean) {
         if (this.size === 0) return -1
         const prev = this.size
 
         super.forEach((v, k) => {
-            if (func(v, k, this)) {
+            if (sweeper(v, k, this)) {
                 this.#options.onSweep?.(v, k)
                 this.delete(k)
             }
@@ -84,6 +102,7 @@ class SuperMap<K, V> extends Map<K, V> {
         return prev - this.size
     }
 
+    /** See [Array.prototype.filter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter) */
     public filter(func: (value: V, key: K, self: this) => boolean) {
         const res = new SuperMap<K, V>(this.#options), entries = this.entries()
 
@@ -96,9 +115,13 @@ class SuperMap<K, V> extends Map<K, V> {
         }
     }
 
+    /** 
+     * Identical to [Array.prototype.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
+     * with the difference that this method also accepts a `filter` function to filter entries before mapping them.
+     */
     public map<T>(
         mapFn: (value: V, key: K, self: this) => T,
-        filterFn: (value: V, key: K, self: this) => boolean = () => true
+        filterFn?: (value: V, key: K, self: this) => boolean
     ) { return Array.from(this.#mapGenerator(mapFn, filterFn)) }
 
     public find(func: (value: V, key: K, self: this) => boolean, returnKey: true): K | null
@@ -115,6 +138,7 @@ class SuperMap<K, V> extends Map<K, V> {
         }
     }
 
+    /** See [Array.prototype.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce) */
     public reduce<T>(fn: (accumulator: T | undefined, value: V, key: K, self: this) => T, initialValue?: T) {
         const entries = this.entries()
         var accumulator = initialValue
@@ -128,6 +152,7 @@ class SuperMap<K, V> extends Map<K, V> {
         }
     }
 
+    /** See [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat) */
     public concat(...children: ReadonlyArray<SuperMap<K, V>>) {
         const results = new SuperMap<K, V>(this.#options)
 
@@ -145,6 +170,10 @@ class SuperMap<K, V> extends Map<K, V> {
         return results
     }
 
+    /**
+     * Identical to [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat)
+     * with the difference that this method mutates the instance instead of creating a new one (like `SuperMap.prototype.concat`)
+     */
     public concatMut(...children: ReadonlyArray<SuperMap<K, V>>) {
         for (const child of children) {
             const entries = child.entries()
@@ -160,6 +189,7 @@ class SuperMap<K, V> extends Map<K, V> {
         return this
     }
 
+    /** See [Array.prototype.sort](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort) */
     public sort(sortFn: (vA: V, vB: V, kA: K, kB: K, self: this) => number) {
         const entries = this.toArray()
         this.clear()
@@ -171,6 +201,7 @@ class SuperMap<K, V> extends Map<K, V> {
         return this
     }
 
+    /** Re-Starts the interval. It gets automatically called in the constructor if the `options.intervalTime` property exists */
     public startInterval() {
         if (this.#dateCache === null) return false
         this.stopInterval()
@@ -184,6 +215,7 @@ class SuperMap<K, V> extends Map<K, V> {
         return true
     }
 
+    /** Stops the interval. */
     public stopInterval() {
         if (this.#dateCache === null) return false
         this.#dateCache.clear()
@@ -208,16 +240,27 @@ class SuperMap<K, V> extends Map<K, V> {
 
     *#mapGenerator<T>(
         mapFn: (value: V, key: K, self: this) => T,
-        filterFn: (value: V, key: K, self: this) => boolean
+        filterFn?: (value: V, key: K, self: this) => boolean
     ) {
         const entries = this.entries()
 
-        while (true) {
-            const iter = entries.next()
-            if (iter.done) break
+        //The code duplication is intentional for performance reasons.
+        if (filterFn) {
+            while (true) {
+                const iter = entries.next()
+                if (iter.done) break
 
-            const [k, v] = iter.value
-            if (filterFn(v, k, this)) yield mapFn(v, k, this)
+                const [k, v] = iter.value
+                if (filterFn(v, k, this)) yield mapFn(v, k, this)
+            }
+        } else {
+            while (true) {
+                const iter = entries.next()
+                if (iter.done) break
+
+                const [k, v] = iter.value
+                yield mapFn(v, k, this)
+            }
         }
     }
 }
