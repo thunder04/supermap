@@ -5,12 +5,12 @@ class SuperMap<K, V> extends Map<K, V> {
 
     constructor(options: Partial<SuperMapOptions<K, V>> = {}) {
         options = Object.assign({
-            expireAfter: null,
+            expireAfter: 0,
             itemsLimit: -1
         }, options)
 
-        if (options.expireAfter !== null && !Number.isSafeInteger(options.expireAfter)) throw new TypeError('options.expireAfter must be a safe integer')
         if ('intervalTime' in options && !Number.isSafeInteger(options.intervalTime)) throw new TypeError('options.intervalTime must be a safe integer')
+        if ('expireAfter' in options && !Number.isSafeInteger(options.expireAfter)) throw new TypeError('options.expireAfter must be a safe integer')
         if ('itemsLimit' in options && !Number.isSafeInteger(options.itemsLimit)) throw new TypeError('options.itemsLimit must be a safe integer')
         if ('onSweep' in options && typeof options.onSweep !== 'function') throw new TypeError('options.onSweep must be a function')
 
@@ -29,7 +29,8 @@ class SuperMap<K, V> extends Map<K, V> {
     /** Converts the entries of the map to an array. */
     public toArray() { return Array.from(this.entries()) }
 
-    public set(key: K, value: V) {
+    public set(key: K, value: V, ttl = 0) {
+        if (Number.isSafeInteger(ttl) === false) throw new TypeError('ttl must be a safe integer')
         if (this.#options.itemsLimit === 0) return this
 
         if (this.#options.itemsLimit > 0) {
@@ -40,7 +41,7 @@ class SuperMap<K, V> extends Map<K, V> {
             }
         }
 
-        return this.#dateCache?.set(key, Date.now()), super.set(key, value)
+        return this.#dateCache?.set(key, Date.now() + ttl), super.set(key, value)
     }
 
     /** Clears the map. Optionally stops the interval as well. */
@@ -239,10 +240,10 @@ class SuperMap<K, V> extends Map<K, V> {
         if (this.#dateCache === null) return
         const expireAfter = this.#options.expireAfter, now = Date.now()
 
-        if (expireAfter !== null)
-            //TODO: In theory the dateCache should have the exact key ordering as `this`. Try to iterate them simultaneously?
-            this.sweep((_, k) => expireAfter < now - (this.#dateCache!.get(k) || 0))
-        else this.sweep(() => true)
+        //TODO: In theory the dateCache should have the exact key ordering as `this`. Try to iterate them simultaneously?
+        this.sweep((_, k) => {
+            return expireAfter < now - this.#dateCache!.get(k)!
+        })
     }
 
     *#mapGenerator<T>(
@@ -276,8 +277,8 @@ export = SuperMap
 
 declare interface SuperMapOptions<K = any, V = any> {
     onSweep: (value: V, key: K) => unknown
-    expireAfter: number | null
     intervalTime: number
+    expireAfter: number
     itemsLimit: number
 }
 

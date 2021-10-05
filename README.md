@@ -14,6 +14,7 @@ Extended Map with Array-like methods with TS typings and ESM support. Made for m
 
 ## Features
 - Automatic sweeping. Set an interval for automatic entry-sweeping with (optional) entry lifetime and (optional) an on-sweep callback.
+- Entry TTL. Custom Time To Live duration (in milliseconds) for each entry of a `SuperMap`.
 - Entry limit. Set the amount of entries a `SuperMap` can have.
 
 ## Contributions
