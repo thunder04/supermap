@@ -18,12 +18,14 @@ for await (const o of walk('src')) {
 
 esbuild.buildSync({
     absWorkingDir: process.cwd(),
+    minifyIdentifiers: true,
+    minifyWhitespace: true,
+    minifySyntax: false,
     platform: 'node',
     keepNames: true,
     outdir: 'dist',
     format: 'cjs',
     bundle: true,
-    minify: true,
     entryPoints,
 })
 

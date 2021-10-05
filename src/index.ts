@@ -31,14 +31,13 @@ class SuperMap<K, V> extends Map<K, V> {
 
     public set(key: K, value: V, ttl = 0) {
         if (Number.isSafeInteger(ttl) === false) throw new TypeError('ttl must be a safe integer')
-        if (this.#options.itemsLimit === 0) return this
+        const itemsLimit = this.#options.itemsLimit
 
-        if (this.#options.itemsLimit > 0) {
-            if (this.size >= this.#options.itemsLimit && this.has(key) === false) {
-                const key = this.first(true)!
-                this.#dateCache?.delete(key)
-                this.delete(key)
-            }
+        if (itemsLimit > -1) {
+            if (itemsLimit === 0) return this
+
+            if (this.size >= itemsLimit && this.has(key) === false)
+                this.delete(this.first(true)!)
         }
 
         return this.#dateCache?.set(key, Date.now() + ttl), super.set(key, value)
@@ -47,7 +46,8 @@ class SuperMap<K, V> extends Map<K, V> {
     /** Clears the map. Optionally stops the interval as well. */
     public clear(stopInterval = false) {
         if (stopInterval) this.stopInterval()
-        return this.#dateCache?.clear(), super.clear()
+        else this.#dateCache?.clear()
+        return super.clear()
     }
 
     /** Gets the first key or value (if it exists) */
@@ -209,16 +209,12 @@ class SuperMap<K, V> extends Map<K, V> {
         return this
     }
 
-    /** Re-Starts the interval. It gets automatically called in the constructor if the `options.intervalTime` property exists */
+    /** Re-starts the interval. It gets automatically called in the constructor if the `options.intervalTime` property exists */
     public startInterval() {
-        if (this.#dateCache === null) return false
-        this.stopInterval()
+        if (this.#dateCache === null || !('intervalTime' in this.#options)) return false
 
-        if ('intervalTime' in this.#options) {
-            this.#interval = setInterval(
-                () => this.#onSweep(), this.#options.intervalTime!
-            ).unref()
-        }
+        this.stopInterval()
+        this.#interval = setInterval(() => this.#onSweep(), this.#options.intervalTime!).unref()
 
         return true
     }
