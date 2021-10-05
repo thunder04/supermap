@@ -238,12 +238,22 @@ class SuperMap<K, V> extends Map<K, V> {
 
     #onSweep() {
         if (this.#dateCache === null) return
-        const expireAfter = this.#options.expireAfter, now = Date.now()
+        const entries = this.entries(), dEntries = this.#dateCache.entries()
+        const { expireAfter, onSweep } = this.#options, now = Date.now()
 
-        //TODO: In theory the dateCache should have the exact key ordering as `this`. Try to iterate them simultaneously?
-        this.sweep((_, k) => {
-            return expireAfter < now - this.#dateCache!.get(k)!
-        })
+        while (true) {
+            const entry = entries.next()
+            if (entry.done) return
+
+            const creationDate = dEntries.next().value[1]
+
+            if (expireAfter < now - creationDate) {
+                const [k, v] = entry.value
+
+                onSweep?.(v, k)
+                this.delete(k)
+            }
+        }
     }
 
     *#mapGenerator<T>(
