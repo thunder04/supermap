@@ -1,7 +1,7 @@
 {
     "name": "@thunder04/supermap",
     "types": "./dist/index.d.ts",
-    "version": "1.1.2",
+    "version": "2.0.0",
     "description": "Extended JS Map with Array-like methods",
     "bugs": "https://github.com/thunder04/supermap/issues",
     "author": "thunder04 (https://github.com/thunder04)",

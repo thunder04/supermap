@@ -24,8 +24,6 @@ class SuperMap<K, V> extends Map<K, V> {
     }
 
     public delete(key: K) { return this.#dateCache?.delete(key), super.delete(key) }
-    /** Converts the map to an object. */
-    public toJSON() { return ({ entries: this.toArray(), options: this.#options }) }
     /** Converts the entries of the map to an array. */
     public toArray() { return Array.from(this.entries()) }
 
