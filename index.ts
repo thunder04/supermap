@@ -1,5 +1,6 @@
 class SuperMap<K, V> extends Map<K, V> {
     #options: RequiredPick<SuperMapOptions<K, V>, 'expireAfter' | 'itemsLimit'>
+    /* Expose the dateCache in a symbol */
     #dateCache: Map<K, number> | null = null
     #interval: NodeJS.Timeout | null = null
 
@@ -61,6 +62,7 @@ class SuperMap<K, V> extends Map<K, V> {
     public last(key?: false): V | undefined
     public last(key: true): K | undefined
     public last(key = false): unknown {
+        //TODO: Avoid allocating a whole new array. Just iterate the whole map
         return this.toArray()[this.size - 1][key ? 0 : 1]
     }
 
@@ -234,7 +236,7 @@ class SuperMap<K, V> extends Map<K, V> {
             const entry = entries.next()
             if (entry.done) return
 
-            if (expireAfter < now - dEntries.next().value[1]) {
+            if (expireAfter < now - (dEntries.next().value?.[1] ?? 0)) {
                 const [k, v] = entry.value
 
                 onSweep?.(v, k)
