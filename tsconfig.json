@@ -7,10 +7,6 @@
         "module": "CommonJS",
         "declaration": true,
         "target": "ESNext",
-        "outDir": "dist",
         "strict": true,
-    },
-    "include": [
-        "src"
-    ]
+    }
 }

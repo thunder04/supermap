@@ -1,15 +1,15 @@
 {
     "name": "@thunder04/supermap",
-    "types": "./dist/index.d.ts",
-    "version": "2.0.0",
+    "types": "./index.d.ts",
+    "version": "2.1.0",
     "description": "Extended JS Map with Array-like methods",
     "bugs": "https://github.com/thunder04/supermap/issues",
     "author": "thunder04 (https://github.com/thunder04)",
     "repository": "github:thunder04/supermap",
     "license": "MIT",
     "exports": {
-        "import": "./dist/index.mjs",
-        "require": "./dist/index.js"
+        "import": "./index.mjs",
+        "require": "./index.js"
     },
     "keywords": [
         "map",

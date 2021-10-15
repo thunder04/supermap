@@ -99,7 +99,7 @@ class SuperMap<K, V> extends Map<K, V> {
         const prev = this.size
 
         super.forEach((v, k) => {
-            if (sweeper(v, k, this)) {
+            if (sweeper(v, k, this as never)) {
                 this.#options.onSweep?.(v, k)
                 this.delete(k)
             }
@@ -277,10 +277,11 @@ class SuperMap<K, V> extends Map<K, V> {
     }
 }
 
+//@ts-ignore
 export = SuperMap
 
 declare interface SuperMapOptions<K = any, V = any> {
-    onSweep: (value: V, key: K) => unknown
+    onSweep: (value: V, key: K) => any
     intervalTime: number
     expireAfter: number
     itemsLimit: number
