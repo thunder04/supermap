@@ -5,7 +5,7 @@ class SuperMap<K, V> extends Map<K, V> {
     private [kDateCache]: Map<K, number> | null = null
     #interval: NodeJS.Timeout | null = null
 
-    constructor(options: Partial<SuperMapOptions<K, V>> = {}, entries?: readonly (readonly [K, V])[] | null) {
+    constructor(options: Partial<SuperMapOptions<K, V>> = {}) {
         options = Object.assign({
             expireAfter: 0,
             itemsLimit: -1
@@ -16,7 +16,7 @@ class SuperMap<K, V> extends Map<K, V> {
         if ('itemsLimit' in options && !Number.isSafeInteger(options.itemsLimit)) throw new TypeError('options.itemsLimit must be a safe integer')
         if ('onSweep' in options && typeof options.onSweep !== 'function') throw new TypeError('options.onSweep must be a function')
 
-        super(entries)
+        super()
         this.#options = options as never
         if ('intervalTime' in options) {
             this[kDateCache] = new Map()
