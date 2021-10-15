@@ -1,7 +1,8 @@
+const kDateCache = Symbol('supermap.date_cache')
+
 class SuperMap<K, V> extends Map<K, V> {
     #options: RequiredPick<SuperMapOptions<K, V>, 'expireAfter' | 'itemsLimit'>
-    /* Expose the dateCache in a symbol */
-    #dateCache: Map<K, number> | null = null
+    private [kDateCache]: Map<K, number> | null = null
     #interval: NodeJS.Timeout | null = null
 
     constructor(options: Partial<SuperMapOptions<K, V>> = {}, entries?: readonly (readonly [K, V])[] | null) {
@@ -18,12 +19,12 @@ class SuperMap<K, V> extends Map<K, V> {
         super(entries)
         this.#options = options as never
         if ('intervalTime' in options) {
-            this.#dateCache = new Map()
+            this[kDateCache] = new Map()
             this.startInterval()
         }
     }
 
-    public delete(key: K) { return this.#dateCache?.delete(key), super.delete(key) }
+    public delete(key: K) { return this[kDateCache]?.delete(key), super.delete(key) }
     public toArray() { return Array.from(this.entries()) }
 
     public set(key: K, value: V, ttl = 0) {
@@ -37,13 +38,13 @@ class SuperMap<K, V> extends Map<K, V> {
                 this.delete(this.first(true)!)
         }
 
-        return this.#dateCache?.set(key, Date.now() + ttl), super.set(key, value)
+        return this[kDateCache]?.set(key, Date.now() + ttl), super.set(key, value)
     }
 
     /** Clears the map. Optionally stops the interval as well. */
     public clear(stopInterval = false) {
         if (stopInterval) this.stopInterval()
-        else this.#dateCache?.clear()
+        else this[kDateCache]?.clear()
         return super.clear()
     }
 
@@ -111,7 +112,8 @@ class SuperMap<K, V> extends Map<K, V> {
 
     /** See [Array.prototype.filter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter) */
     public filter(func: (value: V, key: K, self: this) => boolean) {
-        const map = new SuperMap<K, V>(this.#options), entries = this.entries()
+        const map = new SuperMap<K, V>(this.#options)
+            , entries = this.entries()
 
         while (true) {
             const iter = entries.next()
@@ -162,6 +164,7 @@ class SuperMap<K, V> extends Map<K, V> {
     /** See [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat) */
     public concat(...children: ReadonlyArray<SuperMap<K, V>>) {
         const results = new SuperMap<K, V>(this.#options)
+        results[kDateCache] = this[kDateCache]
 
         for (const child of children.concat(this)) {
             const entries = child.entries()
@@ -207,7 +210,7 @@ class SuperMap<K, V> extends Map<K, V> {
 
     /** Re-starts the interval. It gets automatically called in the constructor if the `options.intervalTime` property exists */
     public startInterval() {
-        if (this.#dateCache === null || !('intervalTime' in this.#options)) return false
+        if (this[kDateCache] === null || !('intervalTime' in this.#options)) return false
 
         this.stopInterval()
         this.#interval = setInterval(() => this.#onSweep(), this.#options.intervalTime!).unref()
@@ -217,8 +220,8 @@ class SuperMap<K, V> extends Map<K, V> {
 
     /** Stops the interval. */
     public stopInterval() {
-        if (this.#dateCache === null) return false
-        this.#dateCache.clear()
+        if (this[kDateCache] === null) return false
+        this[kDateCache]!.clear()
 
         if (this.#interval !== null) {
             clearInterval(this.#interval)
@@ -229,14 +232,14 @@ class SuperMap<K, V> extends Map<K, V> {
     }
 
     #onSweep() {
-        const entries = this.entries(), dEntries = this.#dateCache!.entries()
+        const entries = this.entries(), dEntries = this[kDateCache]!.entries()
         const { expireAfter, onSweep } = this.#options, now = Date.now()
 
         while (true) {
             const entry = entries.next()
             if (entry.done) return
 
-            if (expireAfter < now - (dEntries.next().value?.[1] ?? 0)) {
+            if (expireAfter < now - (dEntries.next().value?.[1] || 0)) {
                 const [k, v] = entry.value
 
                 onSweep?.(v, k)

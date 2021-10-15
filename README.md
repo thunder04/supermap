@@ -28,9 +28,9 @@ Extended Map with Array-like methods with TS typings and ESM support. Made for m
 - `every(func: (value, key, self) => boolean)` Identical to [Array.prototype.every](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every).
 - `filter(func: (value, key, self) => boolean)` Identical to [Array.prototype.filter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter).
 - `find(func: (value, key, self) => boolean, [returnKey: boolean])` Identical to [Array.prototype.find](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find) but with a second argument.
+    - `[returnKey]`: If set to `true`, it will return the found key instead of the found value.
 - `map(func: (value, key, self) => boolean, [filter: (value, key, self) => boolean])` Identical to [Array.prototype.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map) but this method also accepts a `filter` function to filter the entries before mapping them __without__ re-iterating the whole map.
     - `[filter: (value, key, self) => boolean]`: If included, the `map` callback will be called only if the entry passes the `filter` function.
-    - `[returnKey]`: If set to `true`, it will return the found key instead of the found value.
 - `reduce(func: (accumulator, value, key, self) => T, initialValue)` Identical to [Array.prototype.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce).
 - `concat(children)` Identical to [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat).
 - `concatMut(children)` Identical to [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat) but this method modifies the instance instead of creating a new one.
