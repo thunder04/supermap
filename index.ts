@@ -24,9 +24,16 @@ class SuperMap<K, V> extends Map<K, V> {
         }
     }
 
-    public delete(key: K) { return this[kDateCache]?.delete(key), super.delete(key) }
+    /** Converts the Map to an array of entries. */
     public toArray() { return Array.from(this.entries()) }
+    public delete(key: K) { return this[kDateCache]?.delete(key), super.delete(key) }
 
+    /**
+     * Identical to [Map.prototype.set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/set) but with a third argument.
+     * @param ttl The time to live duration of the entry (in milliseconds).
+     *  - If the `expireAfter` option has been provided, the ttl will sum with it.
+     *  - It has no effect if the `intervalTime` option is not included.
+     */
     public set(key: K, value: V, ttl = 0) {
         if (!Number.isSafeInteger(ttl)) throw new TypeError('ttl must be a safe integer')
         const itemsLimit = this.#options.itemsLimit
@@ -41,24 +48,29 @@ class SuperMap<K, V> extends Map<K, V> {
         return this[kDateCache]?.set(key, Date.now() + ttl), super.set(key, value)
     }
 
-    /** Clears the map. Optionally stops the interval as well. */
+    /**
+     * Identical to [Map.prototype.clear](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/clear) but with a second argument.
+     * @param stopInterval If set to `true`, the sweeping interval is also stopped.
+     */
     public clear(stopInterval = false) {
         if (stopInterval) this.stopInterval()
         else this[kDateCache]?.clear()
         return super.clear()
     }
 
-    /** Gets the first key or value (if it exists) */
+    /**
+     * Gets the first key or value of the Map.
+     * @param key If set to `true`, it will return the first key instead of the first value.
+     */
     public first(key?: false): V | undefined
     public first(key: true): K | undefined
     public first(key?: boolean): unknown {
         return key ? this.keys().next().value : this.values().next().value
     }
 
-    /** 
-      * Gets the last key or value (if it exists)
-      * 
-      * **Avoid using this method as it calls the this.toArray() method. If it's unavoidable, at least cache the results.**
+    /**
+     * Gets the last key or value of the Map. *This method should be avoided as it iterates the whole Map*.
+     * @param key If set to `true`, it will return the last key instead of the last value.
      */
     public last(key?: false): V | undefined
     public last(key: true): K | undefined
@@ -67,7 +79,7 @@ class SuperMap<K, V> extends Map<K, V> {
         return this.toArray()[this.size - 1][key ? 0 : 1]
     }
 
-    /** See [Array.prototype.some](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some) */
+    /** Identical to [Array.prototype.some](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some) */
     public some(func: (value: V, key: K, self: this) => boolean) {
         const entries = this.entries()
 
@@ -80,7 +92,7 @@ class SuperMap<K, V> extends Map<K, V> {
         }
     }
 
-    /** See [Array.prototype.every](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every) */
+    /** Identical to [Array.prototype.every](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every) */
     public every(func: (value: V, key: K, self: this) => boolean) {
         const entries = this.entries()
 
@@ -93,7 +105,7 @@ class SuperMap<K, V> extends Map<K, V> {
         }
     }
 
-    /** Deletes the entries that pass the sweeper function and optionally calls the `onSweep` callback (defined in `options`) */
+    /** Deletes the entries that pass the `sweeper` callback and optionally calls the `onSweep` callback (provided in options). */
     public sweep(sweeper: (value: V, key: K, self: this) => boolean) {
         if (this.size === 0) return -1
 
@@ -110,7 +122,7 @@ class SuperMap<K, V> extends Map<K, V> {
         return prev - this.size
     }
 
-    /** See [Array.prototype.filter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter) */
+    /** Identical to [Array.prototype.filter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter) */
     public filter(func: (value: V, key: K, self: this) => boolean) {
         const map = new SuperMap<K, V>(this.#options)
             , entries = this.entries()
@@ -125,14 +137,19 @@ class SuperMap<K, V> extends Map<K, V> {
     }
 
     /** 
-     * Identical to [Array.prototype.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
-     * with the addition this method also accepts a `filter` function to filter entries before mapping them __without__ re-iterating the whole map.
+     * Identical to [Array.prototype.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map) 
+     * but this method also accepts a `filter` function to filter the entries before mapping them __without__ re-iterating the whole map.
+     * @param filterFn If included, the `map` callback will be called only if the entry passes the `filter` function.
      */
     public map<T>(
         mapFn: (value: V, key: K, self: this) => T,
         filterFn?: (value: V, key: K, self: this) => boolean
     ) { return Array.from(this.#mapGenerator(mapFn, filterFn)) }
 
+    /**
+     * Identical to [Array.prototype.find](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find) but with a second argument.
+     * @param returnKey If set to `true`, it will return the found key instead of the found value.
+     */
     public find(func: (value: V, key: K, self: this) => boolean, returnKey: true): K | null
     public find(func: (value: V, key: K, self: this) => boolean, returnKey?: false): V | null
     public find(func: (value: V, key: K, self: this) => boolean, returnKey = false): K | V | null {
@@ -147,7 +164,7 @@ class SuperMap<K, V> extends Map<K, V> {
         }
     }
 
-    /** See [Array.prototype.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce) */
+    /** Identical to [Array.prototype.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce) */
     public reduce<T>(fn: (accumulator: T | undefined, value: V, key: K, self: this) => T, initialValue?: T) {
         const entries = this.entries()
         var accumulator = initialValue
@@ -161,7 +178,7 @@ class SuperMap<K, V> extends Map<K, V> {
         }
     }
 
-    /** See [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat) */
+    /** Identical to [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat) */
     public concat(...children: ReadonlyArray<SuperMap<K, V>>) {
         const results = new SuperMap<K, V>(this.#options)
         results[kDateCache] = this[kDateCache]
@@ -180,7 +197,7 @@ class SuperMap<K, V> extends Map<K, V> {
         return results
     }
 
-    /** Unlike `SuperMap.prototype.concat()`, this method mutates the instance */
+    /** Identical to [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat) but this method mutates the instance instead of creating a new one. */
     public concatMut(...children: ReadonlyArray<SuperMap<K, V>>) {
         for (const child of children) {
             const entries = child.entries()
@@ -196,7 +213,7 @@ class SuperMap<K, V> extends Map<K, V> {
         return this
     }
 
-    /** See [Array.prototype.sort](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort) */
+    /** Identical to [Array.prototype.sort](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort). */
     public sort(sortFn: (vA: V, vB: V, kA: K, kB: K, self: this) => number) {
         const entries = this.toArray()
         this.clear()
@@ -208,7 +225,7 @@ class SuperMap<K, V> extends Map<K, V> {
         return this
     }
 
-    /** Re-starts the interval. It gets automatically called in the constructor if the `options.intervalTime` property exists */
+    /** Starts or restarts the sweeping interval. It gets automatically called in the constructor if the `intervalTime` option has been provided. */
     public startInterval() {
         if (this[kDateCache] === null || !('intervalTime' in this.#options)) return false
 
@@ -218,7 +235,7 @@ class SuperMap<K, V> extends Map<K, V> {
         return true
     }
 
-    /** Stops the interval. */
+    /** Stops the sweeping interval. */
     public stopInterval() {
         if (this[kDateCache] === null) return false
         this[kDateCache]!.clear()

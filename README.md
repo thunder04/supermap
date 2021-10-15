@@ -33,9 +33,12 @@ Extended Map with Array-like methods with TS typings and ESM support. Made for m
     - `[filter: (value, key, self) => boolean]`: If included, the `map` callback will be called only if the entry passes the `filter` function.
 - `reduce(func: (accumulator, value, key, self) => T, initialValue)` Identical to [Array.prototype.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce).
 - `concat(children)` Identical to [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat).
-- `concatMut(children)` Identical to [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat) but this method modifies the instance instead of creating a new one.
+- `concatMut(children)` Identical to [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat) but this method mutates the instance instead of creating a new one.
 - `sweep(sweeper: (value, key, self) => boolean)` Deletes the entries that pass the `sweeper` callback and optionally calls the `onSweep` callback (provided in options).
+- `clear([stopInterval: boolean])` Identical to [Map.prototype.clear](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/clear) but with a second argument.
+    - `[stopInterval: boolean]`: If set to `true`, the sweeping interval is also stopped.
 - `sort(sortFn: (vA: V, vB: V, kA: K, kB: K, self: this) => number)` Identical to [Array.prototype.sort](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort).
+- `toArray()` Converts the Map to an array of entries.
 - `startInterval()` Starts or restarts the sweeping interval. It gets automatically called in the constructor if the `intervalTime` option has been provided.
 - `stopInterval()` Stops the sweeping interval.
 
