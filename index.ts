@@ -75,8 +75,15 @@ class SuperMap<K, V> extends Map<K, V> {
     public last(key?: false): V | undefined
     public last(key: true): K | undefined
     public last(key = false): unknown {
-        //TODO: Avoid allocating a whole new array. Just iterate the whole map
-        return this.toArray()[this.size - 1][key ? 0 : 1]
+        const entries = this.entries()
+        var lastEntry
+
+        while (true) {
+            const iter = entries.next()
+            if (iter.done) return lastEntry && lastEntry[key ? 0 : 1]
+
+            lastEntry = iter.value
+        }
     }
 
     /** Identical to [Array.prototype.some](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some) */
