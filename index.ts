@@ -3,7 +3,7 @@ class SuperMap<K, V> extends Map<K, V> {
     #dateCache: Map<K, number> | null = null
     #interval: NodeJS.Timeout | null = null
 
-    constructor(options: Partial<SuperMapOptions<K, V>> = {}) {
+    constructor(options: Partial<SuperMapOptions<K, V>> = {}, entries?: readonly (readonly [K, V])[] | null) {
         options = Object.assign({
             expireAfter: 0,
             itemsLimit: -1
@@ -14,9 +14,8 @@ class SuperMap<K, V> extends Map<K, V> {
         if ('itemsLimit' in options && !Number.isSafeInteger(options.itemsLimit)) throw new TypeError('options.itemsLimit must be a safe integer')
         if ('onSweep' in options && typeof options.onSweep !== 'function') throw new TypeError('options.onSweep must be a function')
 
-        super()
+        super(entries)
         this.#options = options as never
-
         if ('intervalTime' in options) {
             this.#dateCache = new Map()
             this.startInterval()
@@ -24,17 +23,16 @@ class SuperMap<K, V> extends Map<K, V> {
     }
 
     public delete(key: K) { return this.#dateCache?.delete(key), super.delete(key) }
-    /** Converts the entries of the map to an array. */
     public toArray() { return Array.from(this.entries()) }
 
     public set(key: K, value: V, ttl = 0) {
-        if (Number.isSafeInteger(ttl) === false) throw new TypeError('ttl must be a safe integer')
+        if (!Number.isSafeInteger(ttl)) throw new TypeError('ttl must be a safe integer')
         const itemsLimit = this.#options.itemsLimit
 
         if (itemsLimit > -1) {
             if (itemsLimit === 0) return this
 
-            if (this.size >= itemsLimit && this.has(key) === false)
+            if (this.size >= itemsLimit && !this.has(key))
                 this.delete(this.first(true)!)
         }
 
@@ -62,9 +60,8 @@ class SuperMap<K, V> extends Map<K, V> {
      */
     public last(key?: false): V | undefined
     public last(key: true): K | undefined
-    public last(key?: boolean): unknown {
-        const [k, v] = this.toArray()[this.size - 1]
-        return key ? k : v
+    public last(key = false): unknown {
+        return this.toArray()[this.size - 1][key ? 0 : 1]
     }
 
     /** See [Array.prototype.some](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some) */
@@ -89,18 +86,20 @@ class SuperMap<K, V> extends Map<K, V> {
             if (iter.done) return true
 
             const [k, v] = iter.value
-            if (func(v, k, this) === false) return false
+            if (!func(v, k, this)) return false
         }
     }
 
     /** Deletes the entries that pass the sweeper function and optionally calls the `onSweep` callback (defined in `options`) */
     public sweep(sweeper: (value: V, key: K, self: this) => boolean) {
         if (this.size === 0) return -1
-        const prev = this.size
+
+        const onSweep = this.#options.onSweep
+            , prev = this.size
 
         super.forEach((v, k) => {
             if (sweeper(v, k, this as never)) {
-                this.#options.onSweep?.(v, k)
+                onSweep?.(v, k)
                 this.delete(k)
             }
         })
@@ -110,20 +109,20 @@ class SuperMap<K, V> extends Map<K, V> {
 
     /** See [Array.prototype.filter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter) */
     public filter(func: (value: V, key: K, self: this) => boolean) {
-        const res = new SuperMap<K, V>(this.#options), entries = this.entries()
+        const map = new SuperMap<K, V>(this.#options), entries = this.entries()
 
         while (true) {
             const iter = entries.next()
-            if (iter.done) return res
+            if (iter.done) return map
 
             const [k, v] = iter.value
-            if (func(v, k, this)) res.set(k, v)
+            if (func(v, k, this)) map.set(k, v)
         }
     }
 
     /** 
      * Identical to [Array.prototype.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
-     * with the difference that this method also accepts a `filter` function to filter entries before mapping them.
+     * with the addition this method also accepts a `filter` function to filter entries before mapping them __without__ re-iterating the whole map.
      */
     public map<T>(
         mapFn: (value: V, key: K, self: this) => T,
@@ -176,10 +175,7 @@ class SuperMap<K, V> extends Map<K, V> {
         return results
     }
 
-    /**
-     * Identical to [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat)
-     * with the difference that this method mutates the instance instead of creating a new one (like `SuperMap.prototype.concat`)
-     */
+    /** Unlike `SuperMap.prototype.concat()`, this method mutates the instance */
     public concatMut(...children: ReadonlyArray<SuperMap<K, V>>) {
         for (const child of children) {
             const entries = child.entries()
@@ -231,17 +227,14 @@ class SuperMap<K, V> extends Map<K, V> {
     }
 
     #onSweep() {
-        if (this.#dateCache === null) return
-        const entries = this.entries(), dEntries = this.#dateCache.entries()
+        const entries = this.entries(), dEntries = this.#dateCache!.entries()
         const { expireAfter, onSweep } = this.#options, now = Date.now()
 
         while (true) {
             const entry = entries.next()
             if (entry.done) return
 
-            const creationDate = dEntries.next().value[1]
-
-            if (expireAfter < now - creationDate) {
+            if (expireAfter < now - dEntries.next().value[1]) {
                 const [k, v] = entry.value
 
                 onSweep?.(v, k)
@@ -256,23 +249,25 @@ class SuperMap<K, V> extends Map<K, V> {
     ) {
         const entries = this.entries()
 
-        //The code duplication is intentional for performance reasons.
+        //The code duplication is intentional to improve performance.
+
         if (filterFn) {
             while (true) {
                 const iter = entries.next()
-                if (iter.done) break
+                if (iter.done) return
 
                 const [k, v] = iter.value
-                if (filterFn(v, k, this)) yield mapFn(v, k, this)
+                if (filterFn(v, k, this))
+                    yield mapFn(v, k, this)
             }
-        } else {
-            while (true) {
-                const iter = entries.next()
-                if (iter.done) break
+        }
 
-                const [k, v] = iter.value
-                yield mapFn(v, k, this)
-            }
+        while (true) {
+            const iter = entries.next()
+            if (iter.done) return
+
+            const [k, v] = iter.value
+            yield mapFn(v, k, this)
         }
     }
 }
