@@ -280,7 +280,7 @@ class SuperMap<K, V> extends Map<K, V> {
 //@ts-ignore
 export = SuperMap
 
-declare interface SuperMapOptions<K = any, V = any> {
+export interface SuperMapOptions<K = any, V = any> {
     onSweep: (value: V, key: K) => any
     intervalTime: number
     expireAfter: number
