@@ -38,14 +38,13 @@ class SuperMap<K, V> extends Map<K, V> {
         if (!Number.isSafeInteger(ttl)) throw new TypeError('ttl must be a safe integer')
         const itemsLimit = this.#options.itemsLimit
 
-        if (itemsLimit > -1) {
-            if (itemsLimit === 0) return this
-
-            if (this.size >= itemsLimit && !this.has(key))
-                this.delete(this.first(true)!)
+        if (itemsLimit == 0) return this
+        if (itemsLimit > 0 && this.size >= itemsLimit && !this.has(key)) {
+            this.delete(this.first(true)!)
         }
 
-        return this[kDateCache]?.set(key, Date.now() + ttl), super.set(key, value)
+        this[kDateCache]?.set(key, Date.now() + ttl)
+        return super.set(key, value)
     }
 
     /**
@@ -272,7 +271,7 @@ class SuperMap<K, V> extends Map<K, V> {
         }
     }
 
-    *#mapGenerator<T>(
+    * #mapGenerator<T>(
         mapFn: (value: V, key: K, self: this) => T,
         filterFn?: (value: V, key: K, self: this) => boolean
     ) {
