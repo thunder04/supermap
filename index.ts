@@ -300,7 +300,9 @@ class SuperMap<K, V> extends Map<K, V> {
     }
 }
 
-//@ts-ignore
+// CAUTION TS currently doesn't include this comment in the generated index.d.ts file.
+// As a result it throws an error when "skipLibCheck" is false.
+// @ts-expect-error
 export = SuperMap
 
 export interface SuperMapOptions<K = any, V = any> {
