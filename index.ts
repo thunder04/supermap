@@ -1,32 +1,32 @@
-const kDateCache = Symbol('supermap.date_cache')
+const kDateCache = Symbol('supermap.date_cache');
 
 class SuperMap<K, V> extends Map<K, V> {
-    #options: RequiredPick<SuperMapOptions<K, V>, 'expireAfter' | 'itemsLimit'>
-    private [kDateCache]: Map<K, number> | null = null
-    #interval: NodeJS.Timeout | null = null
+    #options: RequiredPick<SuperMapOptions<K, V>, 'expireAfter' | 'itemsLimit'>;
+    private [kDateCache]: Map<K, number> | null = null;
+    #interval: NodeJS.Timeout | null = null;
 
     constructor(options: Partial<SuperMapOptions<K, V>> = {}) {
         options = Object.assign({
             expireAfter: 0,
             itemsLimit: -1
-        }, options)
+        }, options);
 
-        if ('intervalTime' in options && !Number.isSafeInteger(options.intervalTime)) throw new TypeError('options.intervalTime must be a safe integer')
-        if ('expireAfter' in options && !Number.isSafeInteger(options.expireAfter)) throw new TypeError('options.expireAfter must be a safe integer')
-        if ('itemsLimit' in options && !Number.isSafeInteger(options.itemsLimit)) throw new TypeError('options.itemsLimit must be a safe integer')
-        if ('onSweep' in options && typeof options.onSweep !== 'function') throw new TypeError('options.onSweep must be a function')
+        if ('intervalTime' in options && !Number.isSafeInteger(options.intervalTime)) throw new TypeError('options.intervalTime must be a safe integer');
+        if ('expireAfter' in options && !Number.isSafeInteger(options.expireAfter)) throw new TypeError('options.expireAfter must be a safe integer');
+        if ('itemsLimit' in options && !Number.isSafeInteger(options.itemsLimit)) throw new TypeError('options.itemsLimit must be a safe integer');
+        if ('onSweep' in options && typeof options.onSweep !== 'function') throw new TypeError('options.onSweep must be a function');
 
-        super()
-        this.#options = options as never
+        super();
+        this.#options = options as never;
         if ('intervalTime' in options) {
-            this[kDateCache] = new Map()
-            this.startInterval()
+            this[kDateCache] = new Map();
+            this.startInterval();
         }
     }
 
     /** Converts the Map to an array of entries. */
-    public toArray() { return Array.from(this.entries()) }
-    public delete(key: K) { return this[kDateCache]?.delete(key), super.delete(key) }
+    public toArray() { return Array.from(this.entries()); }
+    public delete(key: K) { return this[kDateCache]?.delete(key), super.delete(key); }
 
     /**
      * Identical to [Map.prototype.set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/set) but with a third argument.
@@ -35,16 +35,16 @@ class SuperMap<K, V> extends Map<K, V> {
      *  - It has no effect if the `intervalTime` option is not provided.
      */
     public set(key: K, value: V, ttl = 0) {
-        if (!Number.isSafeInteger(ttl)) throw new TypeError('ttl must be a safe integer')
-        const itemsLimit = this.#options.itemsLimit
+        if (!Number.isSafeInteger(ttl)) throw new TypeError('ttl must be a safe integer');
+        const itemsLimit = this.#options.itemsLimit;
 
-        if (itemsLimit == 0) return this
+        if (itemsLimit == 0) return this;
         if (itemsLimit > 0 && this.size >= itemsLimit && !this.has(key)) {
-            this.delete(this.first(true)!)
+            this.delete(this.first(true)!);
         }
 
-        this[kDateCache]?.set(key, Date.now() + ttl)
-        return super.set(key, value)
+        this[kDateCache]?.set(key, Date.now() + ttl);
+        return super.set(key, value);
     }
 
     /**
@@ -52,9 +52,9 @@ class SuperMap<K, V> extends Map<K, V> {
      * @param stopInterval If set to `true`, the sweeping interval is also stopped.
      */
     public clear(stopInterval = false) {
-        if (stopInterval) this.stopInterval()
-        else this[kDateCache]?.clear()
-        return super.clear()
+        if (stopInterval) this.stopInterval();
+        else this[kDateCache]?.clear();
+        return super.clear();
     }
 
     /**
@@ -64,7 +64,7 @@ class SuperMap<K, V> extends Map<K, V> {
     public first(key?: false): V | undefined
     public first(key: true): K | undefined
     public first(key?: boolean): unknown {
-        return key ? this.keys().next().value : this.values().next().value
+        return key ? this.keys().next().value : this.values().next().value;
     }
 
     /**
@@ -74,71 +74,71 @@ class SuperMap<K, V> extends Map<K, V> {
     public last(key?: false): V | undefined
     public last(key: true): K | undefined
     public last(key = false): unknown {
-        const entries = this.entries()
-        var lastEntry
+        const entries = this.entries();
+        let lastEntry;
 
         while (true) {
-            const iter = entries.next()
-            if (iter.done) return lastEntry && lastEntry[key ? 0 : 1]
+            const iter = entries.next();
+            if (iter.done) return lastEntry && lastEntry[key ? 0 : 1];
 
-            lastEntry = iter.value
+            lastEntry = iter.value;
         }
     }
 
     /** Identical to [Array.prototype.some](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some) */
     public some(func: (value: V, key: K, self: this) => boolean) {
-        const entries = this.entries()
+        const entries = this.entries();
 
         while (true) {
-            const iter = entries.next()
-            if (iter.done) return false
+            const iter = entries.next();
+            if (iter.done) return false;
 
-            const [k, v] = iter.value
-            if (func(v, k, this)) return true
+            const [k, v] = iter.value;
+            if (func(v, k, this)) return true;
         }
     }
 
     /** Identical to [Array.prototype.every](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every) */
     public every(func: (value: V, key: K, self: this) => boolean) {
-        const entries = this.entries()
+        const entries = this.entries();
 
         while (true) {
-            const iter = entries.next()
-            if (iter.done) return true
+            const iter = entries.next();
+            if (iter.done) return true;
 
-            const [k, v] = iter.value
-            if (!func(v, k, this)) return false
+            const [k, v] = iter.value;
+            if (!func(v, k, this)) return false;
         }
     }
 
     /** Deletes the entries that pass the `sweeper` callback and optionally calls the `onSweep` callback (provided in options). */
     public sweep(sweeper: (value: V, key: K, self: this) => boolean) {
-        if (this.size === 0) return -1
+        if (this.size === 0) return -1;
 
-        const onSweep = this.#options.onSweep
-            , prev = this.size
+        const onSweep = this.#options.onSweep;
+        const prev = this.size;
 
         super.forEach((v, k) => {
             if (sweeper(v, k, this as never)) {
-                onSweep?.(v, k)
-                this.delete(k)
+                onSweep?.(v, k);
+                this.delete(k);
             }
-        })
+        });
 
-        return prev - this.size
+        return prev - this.size;
     }
 
     /** Identical to [Array.prototype.filter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter) */
     public filter(func: (value: V, key: K, self: this) => boolean) {
-        const map = new SuperMap<K, V>(this.#options)
-            , entries = this.entries()
+        const map = new SuperMap<K, V>(this.#options);
+        const entries = this.entries();
 
         while (true) {
-            const iter = entries.next()
-            if (iter.done) return map
+            const iter = entries.next();
+            if (iter.done) return map;
 
-            const [k, v] = iter.value
-            if (func(v, k, this)) map.set(k, v)
+            const [k, v] = iter.value;
+            if (func(v, k, this)) map.set(k, v);
         }
     }
 
@@ -150,7 +150,7 @@ class SuperMap<K, V> extends Map<K, V> {
     public map<T>(
         mapFn: (value: V, key: K, self: this) => T,
         filterFn?: (value: V, key: K, self: this) => boolean
-    ) { return Array.from(this.#mapGenerator(mapFn, filterFn)) }
+    ) { return Array.from(this.#mapGenerator(mapFn, filterFn)); }
 
     /**
      * Identical to [Array.prototype.find](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find) but with a second argument.
@@ -159,99 +159,104 @@ class SuperMap<K, V> extends Map<K, V> {
     public find(func: (value: V, key: K, self: this) => boolean, returnKey: true): K | null
     public find(func: (value: V, key: K, self: this) => boolean, returnKey?: false): V | null
     public find(func: (value: V, key: K, self: this) => boolean, returnKey = false): K | V | null {
-        const entries = this.entries()
+        const entries = this.entries();
 
         while (true) {
-            const iter = entries.next()
-            if (iter.done) return null
+            const iter = entries.next();
+            if (iter.done) return null;
 
-            const [k, v] = iter.value
-            if (func(v, k, this)) return returnKey ? k : v
+            const [k, v] = iter.value;
+            if (func(v, k, this)) return returnKey ? k : v;
         }
     }
 
     /** Identical to [Array.prototype.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce) */
     public reduce<T>(fn: (accumulator: T | undefined, value: V, key: K, self: this) => T, initialValue?: T) {
-        const entries = this.entries()
-        var accumulator = initialValue
+        const entries = this.entries();
+        var accumulator = initialValue;
 
         while (true) {
-            const iter = entries.next()
-            if (iter.done) return accumulator!
+            const iter = entries.next();
+            if (iter.done) return accumulator!;
 
-            const [k, v] = iter.value
-            accumulator = fn(accumulator, v, k, this)
+            const [k, v] = iter.value;
+            accumulator = fn(accumulator, v, k, this);
         }
     }
 
     /** Identical to [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat) */
     public concat(...children: ReadonlyArray<SuperMap<K, V>>) {
-        const results = new SuperMap<K, V>(this.#options)
-        results[kDateCache] = this[kDateCache]
+        const results = new SuperMap<K, V>(this.#options);
+        results[kDateCache] = this[kDateCache];
 
         for (const child of children.concat(this)) {
-            const entries = child.entries()
+            const entries = child.entries();
 
             while (true) {
-                const iter = entries.next()
-                if (iter.done) break
+                const iter = entries.next();
+                if (iter.done) break;
 
-                results.set(...iter.value)
+                results.set(...iter.value);
             }
         }
 
-        return results
+        return results;
     }
 
-    /** Identical to [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat) but this method mutates the instance instead of creating a new one. */
+    /** 
+     * Identical to [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat)
+     * but this method mutates the instance instead of creating a new one.
+     */
     public concatMut(...children: ReadonlyArray<SuperMap<K, V>>) {
         for (const child of children) {
-            const entries = child.entries()
+            const entries = child.entries();
 
             while (true) {
-                const iter = entries.next()
-                if (iter.done) break
+                const iter = entries.next();
+                if (iter.done) break;
 
-                this.set(...iter.value)
+                this.set(...iter.value);
             }
         }
 
-        return this
+        return this;
     }
 
     /** Identical to [Array.prototype.sort](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort). */
     public sort(sortFn: (vA: V, vB: V, kA: K, kB: K, self: this) => number) {
-        const entries = this.toArray()
-        this.clear()
+        const entries = this.toArray();
+        this.clear();
 
         entries
             .sort(([kA, vA], [kB, vB]) => sortFn(vA, vB, kA, kB, this))
-            .forEach((v) => this.set(...v))
+            .forEach((v) => this.set(...v));
 
-        return this
+        return this;
     }
 
     /** Starts or restarts the sweeping interval. It gets automatically called in the constructor if the `intervalTime` option has been provided. */
     public startInterval() {
-        if (this[kDateCache] === null || !('intervalTime' in this.#options)) return false
+        if (this[kDateCache] === null || !('intervalTime' in this.#options)) {
+            return false;
+        }
 
-        this.stopInterval()
-        this.#interval = setInterval(() => this.#onSweep(), this.#options.intervalTime!).unref()
+        this.stopInterval();
+        this.#interval = setInterval(() => this.#onSweep(), this.#options.intervalTime!).unref();
 
-        return true
+        return true;
     }
 
     /** Stops the sweeping interval. */
     public stopInterval() {
-        if (this[kDateCache] === null) return false
-        this[kDateCache]!.clear()
+        if (this[kDateCache] === null) return false;
+        this[kDateCache]!.clear();
 
         if (this.#interval !== null) {
-            clearInterval(this.#interval)
-            this.#interval = null
+            clearInterval(this.#interval);
+            this.#interval = null;
         }
 
-        return true
+        return true;
     }
 
     #onSweep() {
@@ -260,14 +265,14 @@ class SuperMap<K, V> extends Map<K, V> {
         const time = Date.now() - expireAfter;
 
         while (true) {
-            const entry = entries.next()
-            if (entry.done) return
+            const entry = entries.next();
+            if (entry.done) return;
 
             if (time > (dEntries.next().value?.[1] || 0)) {
-                const [k, v] = entry.value
+                const [k, v] = entry.value;
 
-                onSweep?.(v, k)
-                this.delete(k)
+                onSweep?.(v, k);
+                this.delete(k);
             }
         }
     }
@@ -276,27 +281,28 @@ class SuperMap<K, V> extends Map<K, V> {
         mapFn: (value: V, key: K, self: this) => T,
         filterFn?: (value: V, key: K, self: this) => boolean
     ) {
-        const entries = this.entries()
+        const entries = this.entries();
 
-        //The code duplication is intentional to improve performance.
+        // The code duplication is intentional to avoid unnecessary conditions.
 
         if (filterFn) {
             while (true) {
-                const iter = entries.next()
-                if (iter.done) return
+                const iter = entries.next();
+                if (iter.done) return;
 
-                const [k, v] = iter.value
-                if (filterFn(v, k, this))
-                    yield mapFn(v, k, this)
+                const [k, v] = iter.value;
+                if (filterFn(v, k, this)) {
+                    yield mapFn(v, k, this);
+                }
             }
         }
 
         while (true) {
-            const iter = entries.next()
-            if (iter.done) return
+            const iter = entries.next();
+            if (iter.done) return;
 
-            const [k, v] = iter.value
-            yield mapFn(v, k, this)
+            const [k, v] = iter.value;
+            yield mapFn(v, k, this);
         }
     }
 }
@@ -304,13 +310,13 @@ class SuperMap<K, V> extends Map<K, V> {
 // CAUTION TS currently doesn't include this comment in the generated index.d.ts file.
 // As a result it throws an error when "skipLibCheck" is false.
 // @ts-expect-error
-export = SuperMap
+export = SuperMap;
 
 export interface SuperMapOptions<K = any, V = any> {
-    onSweep: (value: V, key: K) => any
-    intervalTime: number
-    expireAfter: number
-    itemsLimit: number
+    onSweep: (value: V, key: K) => any;
+    intervalTime: number;
+    expireAfter: number;
+    itemsLimit: number;
 }
 
-type RequiredPick<T, K extends keyof T> = Partial<T> & { [P in K]-?: T[P] }
+type RequiredPick<T, K extends keyof T> = Partial<T> & { [P in K]-?: T[P] };
