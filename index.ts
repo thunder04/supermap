@@ -30,9 +30,9 @@ class SuperMap<K, V> extends Map<K, V> {
 
     /**
      * Identical to [Map.prototype.set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/set) but with a third argument.
-     * @param ttl The time to live duration of the entry (in milliseconds).
-     *  - If the `expireAfter` option has been provided, the ttl will sum with it.
-     *  - It has no effect if the `intervalTime` option is not included.
+     * @param ttl Time to live duration of this entry (in milliseconds).
+     *  - If the `expireAfter` option is set, the ttl will sum with it.
+     *  - It has no effect if the `intervalTime` option is not provided.
      */
     public set(key: K, value: V, ttl = 0) {
         if (!Number.isSafeInteger(ttl)) throw new TypeError('ttl must be a safe integer')
@@ -255,14 +255,15 @@ class SuperMap<K, V> extends Map<K, V> {
     }
 
     #onSweep() {
-        const entries = this.entries(), dEntries = this[kDateCache]!.entries()
-        const { expireAfter, onSweep } = this.#options, now = Date.now()
+        const entries = this.entries(), dEntries = this[kDateCache]!.entries();
+        const { expireAfter, onSweep } = this.#options;
+        const time = Date.now() - expireAfter;
 
         while (true) {
             const entry = entries.next()
             if (entry.done) return
 
-            if (expireAfter < now - (dEntries.next().value?.[1] || 0)) {
+            if (time > (dEntries.next().value?.[1] || 0)) {
                 const [k, v] = entry.value
 
                 onSweep?.(v, k)
