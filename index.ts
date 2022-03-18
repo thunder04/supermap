@@ -31,8 +31,8 @@ class SuperMap<K, V> extends Map<K, V> {
     /**
      * Identical to [Map.prototype.set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/set) but with a third argument.
      * @param ttl Time to live duration of this entry (in milliseconds).
-     *  - If the `expireAfter` option is set, the ttl will sum with it.
-     *  - It has no effect if the `intervalTime` option is not provided.
+     *  - It has no effect if `options.intervalTime` isn't provided.
+     *  - `options.expireAfter` sums with `ttl`.
      */
     public set(key: K, value: V, ttl = 0) {
         if (!Number.isSafeInteger(ttl)) throw new TypeError('ttl must be a safe integer');
@@ -59,7 +59,7 @@ class SuperMap<K, V> extends Map<K, V> {
 
     /**
      * Gets the first key or value of the Map.
-     * @param key If set to `true`, it will return the first key instead of the first value.
+     * @param key If set to `true`, it will return the first key instead of value.
      */
     public first(key?: false): V | undefined
     public first(key: true): K | undefined
@@ -69,7 +69,7 @@ class SuperMap<K, V> extends Map<K, V> {
 
     /**
      * Gets the last key or value of the Map. *This method should be avoided as it iterates the whole Map*.
-     * @param key If set to `true`, it will return the last key instead of the last value.
+     * @param key If set to `true`, it will return the last key instead of value.
      */
     public last(key?: false): V | undefined
     public last(key: true): K | undefined
@@ -111,7 +111,7 @@ class SuperMap<K, V> extends Map<K, V> {
         }
     }
 
-    /** Deletes the entries that pass the `sweeper` callback and optionally calls the `onSweep` callback (provided in options). */
+    /** Deletes the entries that pass the `sweeper` callback and calls the `options.onSweep` callback (if provided). */
     public sweep(sweeper: (value: V, key: K, self: this) => boolean) {
         if (this.size === 0) return -1;
 
@@ -143,9 +143,10 @@ class SuperMap<K, V> extends Map<K, V> {
     }
 
     /** 
-     * Identical to [Array.prototype.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map) 
-     * but this method also accepts a `filter` function to filter the entries before mapping them __without__ re-iterating the whole map.
-     * @param filterFn If included, the `map` callback will be called only if the entry passes the `filter` function.
+     * Identical to [Array.prototype.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
+     * but this method also accepts a filter callback to filter the entries before mapping them without iterating the whole map again.
+     * Prefer using this method instead of `<SuperMap>.filter(...).map(...)`.
+     * @param filterFn Optional filter callback to filter entries.
      */
     public map<T>(
         mapFn: (value: V, key: K, self: this) => T,
@@ -154,7 +155,7 @@ class SuperMap<K, V> extends Map<K, V> {
 
     /**
      * Identical to [Array.prototype.find](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find) but with a second argument.
-     * @param returnKey If set to `true`, it will return the found key instead of the found value.
+     * @param returnKey If set to `true`, it will return the found key instead of value.
      */
     public find(func: (value: V, key: K, self: this) => boolean, returnKey: true): K | null
     public find(func: (value: V, key: K, self: this) => boolean, returnKey?: false): V | null
@@ -205,7 +206,7 @@ class SuperMap<K, V> extends Map<K, V> {
 
     /** 
      * Identical to [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat)
-     * but this method mutates the instance instead of creating a new one.
+     * but this method mutates this instance instead of creating a new one.
      */
     public concatMut(...children: ReadonlyArray<SuperMap<K, V>>) {
         for (const child of children) {
