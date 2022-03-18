@@ -225,13 +225,11 @@ class SuperMap<K, V> extends Map<K, V> {
 
     /** Identical to [Array.prototype.sort](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort). */
     public sort(sortFn: (vA: V, vB: V, kA: K, kB: K, self: this) => number) {
-        const entries = this.toArray();
-        this.clear();
-
-        entries
+        this.toArray()
             .sort(([kA, vA], [kB, vB]) => sortFn(vA, vB, kA, kB, this))
             .forEach((v) => this.set(...v));
 
+        this.clear();
         return this;
     }
 
