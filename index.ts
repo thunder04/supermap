@@ -92,9 +92,7 @@ class SuperMap<K, V> extends Map<K, V> {
         while (true) {
             const iter = entries.next();
             if (iter.done) return false;
-
-            const [k, v] = iter.value;
-            if (func(v, k, this)) return true;
+            if (func(iter.value[1], iter.value[0], this)) return true;
         }
     }
 
@@ -105,9 +103,7 @@ class SuperMap<K, V> extends Map<K, V> {
         while (true) {
             const iter = entries.next();
             if (iter.done) return true;
-
-            const [k, v] = iter.value;
-            if (!func(v, k, this)) return false;
+            if (!func(iter.value[1], iter.value[0], this)) return false;
         }
     }
 
@@ -180,8 +176,7 @@ class SuperMap<K, V> extends Map<K, V> {
             const iter = entries.next();
             if (iter.done) return accumulator!;
 
-            const [k, v] = iter.value;
-            accumulator = fn(accumulator, v, k, this);
+            accumulator = fn(accumulator, iter.value[1], iter.value[0], this);
         }
     }
 
@@ -260,17 +255,17 @@ class SuperMap<K, V> extends Map<K, V> {
 
     #onSweep() {
         const entries = this.entries(), dEntries = this[kDateCache]!.entries();
-        const { expireAfter, onSweep } = this.#options;
-        const time = Date.now() - expireAfter;
+        const time = Date.now() - this.#options.expireAfter;
+        const onSweep = this.#options.onSweep;
 
         while (true) {
             const entry = entries.next();
             if (entry.done) return;
 
             if (time > (dEntries.next().value?.[1] || 0)) {
-                const [k, v] = entry.value;
+                const k = entry.value[0];
 
-                onSweep?.(v, k);
+                onSweep?.(entry.value[1], k);
                 this.delete(k);
             }
         }
@@ -300,8 +295,7 @@ class SuperMap<K, V> extends Map<K, V> {
             const iter = entries.next();
             if (iter.done) return;
 
-            const [k, v] = iter.value;
-            yield mapFn(v, k, this);
+            yield mapFn(iter.value[1], iter.value[0], this);
         }
     }
 }
