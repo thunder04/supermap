@@ -11,10 +11,14 @@ class SuperMap<K, V> extends Map<K, V> {
             itemsLimit: -1
         }, options);
 
-        if ('intervalTime' in options && !Number.isSafeInteger(options.intervalTime)) throw new TypeError('options.intervalTime must be a safe integer');
-        if ('expireAfter' in options && !Number.isSafeInteger(options.expireAfter)) throw new TypeError('options.expireAfter must be a safe integer');
-        if ('itemsLimit' in options && !Number.isSafeInteger(options.itemsLimit)) throw new TypeError('options.itemsLimit must be a safe integer');
-        if ('onSweep' in options && typeof options.onSweep !== 'function') throw new TypeError('options.onSweep must be a function');
+        if ('intervalTime' in options && (!Number.isSafeInteger(options.intervalTime) || options.intervalTime! < 0))
+            throw new TypeError('options.intervalTime must be a safe positive integer.');
+        if ('expireAfter' in options && (!Number.isSafeInteger(options.expireAfter) || options.expireAfter! < 0))
+            throw new TypeError('options.expireAfter must be a safe positive integer.');
+        if ('itemsLimit' in options && (!Number.isSafeInteger(options.itemsLimit) || options.itemsLimit! < -1))
+            throw new TypeError('options.itemsLimit must be a safe integer above or equal to -1.');
+        if ('onSweep' in options && typeof options.onSweep !== 'function')
+            throw new TypeError('options.onSweep must be a function.');
 
         super();
         this.#options = options as never;
@@ -36,10 +40,11 @@ class SuperMap<K, V> extends Map<K, V> {
      */
     public set(key: K, value: V, ttl = 0) {
         if (!Number.isSafeInteger(ttl)) throw new TypeError('ttl must be a safe integer');
+
         const itemsLimit = this.#options.itemsLimit;
 
-        if (itemsLimit == 0) return this;
-        if (itemsLimit > 0 && this.size >= itemsLimit && !this.has(key)) {
+        if (itemsLimit === 0) return this;
+        if (this.size >= itemsLimit && !this.has(key)) {
             this.delete(this.first(true)!);
         }
 
