@@ -6,19 +6,20 @@ class SuperMap<K, V> extends Map<K, V> {
     #interval: NodeJS.Timeout | null = null;
 
     constructor(options: Partial<SuperMapOptions<K, V>> = {}) {
-        options = Object.assign({
-            expireAfter: 0,
-            itemsLimit: -1
-        }, options);
-
         if ('intervalTime' in options && (!Number.isSafeInteger(options.intervalTime) || options.intervalTime! < 0))
             throw new TypeError('options.intervalTime must be a safe positive integer.');
         if ('expireAfter' in options && (!Number.isSafeInteger(options.expireAfter) || options.expireAfter! < 0))
             throw new TypeError('options.expireAfter must be a safe positive integer.');
-        if ('itemsLimit' in options && (!Number.isSafeInteger(options.itemsLimit) || options.itemsLimit! < -1))
-            throw new TypeError('options.itemsLimit must be a safe integer above or equal to -1.');
+        if ('itemsLimit' in options && (!Number.isSafeInteger(options.itemsLimit) || options.itemsLimit! < 0))
+            throw new TypeError('options.itemsLimit must be a safe positive integer.');
         if ('onSweep' in options && typeof options.onSweep !== 'function')
             throw new TypeError('options.onSweep must be a function.');
+
+        options = {
+            expireAfter: 0,
+            itemsLimit: 0,
+            ...options
+        };
 
         super();
         this.#options = options as never;
@@ -42,9 +43,7 @@ class SuperMap<K, V> extends Map<K, V> {
         if (!Number.isSafeInteger(ttl)) throw new TypeError('ttl must be a safe integer');
 
         const itemsLimit = this.#options.itemsLimit;
-
-        if (itemsLimit === 0) return this;
-        if (this.size >= itemsLimit && !this.has(key)) {
+        if (itemsLimit > 0 && this.size >= itemsLimit && !this.has(key)) {
             this.delete(this.first(true)!);
         }
 
