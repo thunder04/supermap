@@ -1,6 +1,6 @@
 const kDateCache = Symbol('supermap.date_cache');
 
-class SuperMap<K, V> extends Map<K, V> {
+export class SuperMap<K, V> extends Map<K, V> {
     #options: RequiredPick<SuperMapOptions<K, V>, 'expireAfter' | 'itemsLimit'>;
     private [kDateCache]: Map<K, number> | null = null;
     #interval: NodeJS.Timeout | null = null;
@@ -142,7 +142,7 @@ class SuperMap<K, V> extends Map<K, V> {
         }
     }
 
-    /** 
+    /**
      * Identical to [Array.prototype.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
      * but this method also accepts a filter callback to filter the entries before mapping them without iterating the whole map again.
      * Prefer using this method instead of `<SuperMap>.filter(...).map(...)`.
@@ -203,7 +203,7 @@ class SuperMap<K, V> extends Map<K, V> {
         return results;
     }
 
-    /** 
+    /**
      * Identical to [Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat)
      * but this method mutates this instance instead of creating a new one.
      */

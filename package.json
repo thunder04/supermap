@@ -1,15 +1,24 @@
 {
     "name": "@thunder04/supermap",
     "types": "./index.d.ts",
-    "version": "3.0.2",
+    "version": "3.0.3",
     "description": "Extended JS Map with Array-like methods",
     "bugs": "https://github.com/thunder04/supermap/issues",
     "author": "thunder04 (https://github.com/thunder04)",
-    "repository": "github:thunder04/supermap",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/thunder04/supermap.git"
+    },
     "license": "MIT",
     "exports": {
-        "import": "./index.mjs",
-        "require": "./index.js"
+        "import": {
+            "types": "./index.d.ts",
+            "default": "./index.mjs"
+        },
+        "require": {
+            "types": "./index.d.ts",
+            "default": "./index.js"
+        }
     },
     "keywords": [
         "map",
@@ -17,12 +26,15 @@
         "supermap"
     ],
     "devDependencies": {
-        "@types/node": "^16.9.3",
-        "esbuild": "^0.12.28",
-        "typescript": "^4.4.3"
+        "@swc/cli": "^0.1.62",
+        "@swc/core": "^1.3.90",
+        "@types/node": "^20.8.0",
+        "typescript": "^5.2.2"
     },
     "scripts": {
-        "build": "node build.mjs && tsc --emitDeclarationOnly && sed -i 's/export = SuperMap;/\\/\\/@ts-expect-error\\n&/' index.d.ts",
-        "prepack": "npm run build"
+        "build-types": "tsc --emitDeclarationOnly && sed -i 's/export = SuperMap;/\\/\\/@ts-expect-error\\n&/' index.d.ts",
+        "build": "npx swc index.ts -o index.js -C jsc.target=es2022 -C module.type=commonjs && pnpm build-types",
+        "prepare": "pnpm build",
+        "prepack": "pnpm build"
     }
 }
