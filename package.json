@@ -34,7 +34,7 @@
     "scripts": {
         "build-types": "tsc --emitDeclarationOnly && sed -i 's/export = SuperMap;/\\/\\/@ts-expect-error\\n&/' index.d.ts",
         "build": "npx swc index.ts -o index.js -C jsc.target=es2022 -C module.type=commonjs && pnpm build-types",
-        "prepare": "pnpm build",
+        "prepublishOnly": "pnpm build",
         "prepack": "pnpm build"
     }
 }
