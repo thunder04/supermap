@@ -1,7 +1,7 @@
 {
     "name": "@thunder04/supermap",
     "types": "./index.d.ts",
-    "version": "3.0.4",
+    "version": "4.0.0",
     "description": "Extended JS Map with Array-like methods",
     "bugs": "https://github.com/thunder04/supermap/issues",
     "author": "thunder04 (https://github.com/thunder04)",
@@ -26,10 +26,10 @@
         "supermap"
     ],
     "devDependencies": {
-        "@swc/cli": "^0.3.9",
-        "@swc/core": "^1.4.0",
-        "@types/node": "^20.11.16",
-        "typescript": "^5.3.3"
+        "@swc/cli": "^0.6.0",
+        "@swc/core": "^1.10.15",
+        "@types/node": "^22.13.1",
+        "typescript": "^5.7.3"
     },
     "scripts": {
         "build-types": "tsc --emitDeclarationOnly && sed -i 's/export = SuperMap;/\\/\\/@ts-expect-error\\n&/' index.d.ts",
